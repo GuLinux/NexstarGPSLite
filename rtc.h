@@ -1,21 +1,17 @@
 #include <Arduino.h>
-#include "singleton.h"
+#include <RTClock.h>
 #pragma once
 
-
-class uRTCLib;
-class RTC: public Singleton<RTC> {
+class RTCProvider {
 public:
-  RTC();
-  ~RTC();
+  RTCProvider();
   void setup();
-  time_t utc();
-  time_t localtime();
+  time_t utc() const;
   void set_time(time_t time);
-  void write_ee(const uint32_t address, const uint8_t value);
-  uint8_t read_ee(const uint32_t address);
-  void update_ee(const uint32_t address, const uint8_t value);
+  void set_time(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+  bool is_valid() const;
 private:
-  uRTCLib *rtc;
+  mutable RTClock rtclock;
 };
 
+// vim: set shiftwidth=2 tabstop=2 expandtab:indentSize=2:tabSize=2:noTabs=true:

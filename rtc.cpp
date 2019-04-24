@@ -1,77 +1,48 @@
 #include "rtc.h"
-#include <uRTCLib.h>
-#include "logger.h"
-#include "settings.h"
-
-// Function defined before importing Timelib, to avoid clashing with the dayOfWeek macro
-uint8_t get_day_of_week(uRTCLib *rtc) {
-  return rtc->dayOfWeek();
-}
-
 #include <TimeLib.h>
 
+#define REFERENCE_UNIX_TIMESTAMP 1546300800 // 01/01/2019 @ 12:00am (UTC) 
 
-namespace {
-  time_t syncProvider() {
-    if(RTC::instance()) {
-      return RTC::instance()->localtime();
-    }
-    return 0;
-  }
+time_t syncProvider();
+
+RTCProvider *_rtc_provider_instance = nullptr;
+
+RTCProvider::RTCProvider() : rtclock(RTCSEL_LSE) {
+    _rtc_provider_instance = this;
 }
 
-RTC::RTC() : Singleton<RTC>(this) {
-  rtc = new uRTCLib();
-}
-
-RTC::~RTC() {
-  delete rtc;
-}
-
-
-void RTC::setup() {
-  TRACE() << F("Setting up RTC time provider");
-  rtc->set_rtc_address(0x68);
-  rtc->set_ee_address(0x50);
+void RTCProvider::setup() {
   setSyncProvider(syncProvider);
   setSyncInterval(2);
 }
 
-time_t RTC::utc() {
-  rtc->refresh();
-  TimeElements time{
-    rtc->second(),
-    rtc->minute(),
-    rtc->hour(),
-    get_day_of_week(rtc),
-    rtc->day(),
-    rtc->month(),
-    static_cast<uint8_t>(y2kYearToTm(rtc->year())),
+time_t RTCProvider::utc() const {
+  return rtclock.getTime();
+}
+
+void RTCProvider::set_time(time_t time) {
+  rtclock.setTime(time);
+}
+
+
+void RTCProvider::set_time(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+  tmElements_t _time{
+    second, minute, hour,
+    0,
+    day, month, CalendarYrToTm(year),
   };
-  return makeTime(time);
+  this->set_time(makeTime(_time));
 }
 
-time_t RTC::localtime() {
-  return utc() + (Settings::instance()->timezone().value + Settings::instance()->daylight_saving().value) * 3600;
+time_t syncProvider() {
+  if(_rtc_provider_instance) {
+    return _rtc_provider_instance->utc();
+  }
+  return 0;
 }
 
-void RTC::set_time(time_t time) {
-  TRACE() << F("Called set_time with ") << time;
-  TimeElements time_elements;
-  breakTime(time, time_elements);
-  rtc->set(time_elements.Second, time_elements.Minute, time_elements.Hour, time_elements.Wday, time_elements.Day, time_elements.Month, tmYearToY2k(time_elements.Year));
+bool RTCProvider::is_valid() const {
+    return utc() > REFERENCE_UNIX_TIMESTAMP;
 }
 
-void RTC::write_ee(const uint32_t address, const uint8_t value) {
-  rtc->eeprom_write(address, value);
-}
-
-uint8_t RTC::read_ee(const uint32_t address) {
-  return rtc->eeprom_read(address);
-}
-
-void RTC::update_ee(const uint32_t address, const uint8_t value) {
-  if(read_ee(address) != value)
-    write_ee(address, value);
-}
-
+// vim: set shiftwidth=2 tabstop=2 expandtab:indentSize=2:tabSize=2:noTabs=true:
