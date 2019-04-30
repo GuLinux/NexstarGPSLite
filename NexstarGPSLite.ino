@@ -4,7 +4,6 @@
 #define USBSerial Serial
 
 // Logging must be imported first
-//#define DISABLE_LOGGING
 #include "logging.h"
 #undef CR
 
@@ -57,18 +56,9 @@ void setupLeds() {
 
 void setup() {
   setupLeds();
-  int started = millis();
-  while(!USBSerial && millis() - started < 2000)
-    delay(100);
-
-  if(USBSerial) {
-    USBSerial.begin(9600);
-    commPort = &USBSerial;
-    Log.begin(LOG_LEVEL_VERBOSE, &USBSerial);
-  } else {
-    commPort = &BluetoothSerial;
-    bluetooth.setup();
-  }
+  USBSerial.begin(9600);
+  Log.begin(LOG_LEVEL_VERBOSE, &LoggingPort);
+  bluetooth.setup();
 
   TRACE("Initialising...");
   gps.begin();

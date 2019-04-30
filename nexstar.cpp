@@ -4,7 +4,7 @@
 
 #define NOT_CONNECTED_DELAY 2500
 #define PING_DELAY 30000
-#define COMMAND_IDLE 30000
+#define COMMAND_IDLE 5000
 
 Nexstar::Nexstar(HardwareSerial &port, GPS &gps, RTCProvider &rtc) : _port(port), _gps(gps), _rtc(rtc) {
 }
@@ -19,6 +19,63 @@ void Nexstar::process() {
   comms();
 }
 
+class NexstarReply {
+public:
+  NexstarReply(HardwareSerial &port) {
+    uint32_t started = millis();
+    while(millis() - started < 2000) {
+      if(port.available()) {
+        _buffer[len] = port.read();
+        if(_buffer[len++] == '#')
+          break;
+      }
+    }
+    _buffer[len] = 0;
+  }
+
+  void debug(bool endline=true) {
+#ifndef DISABLE_LOGGING
+    char log_buffer[10] = {0};
+    for(size_t i=0; i<len; i++) {
+      if(_buffer[i] < 31) {
+        sprintf(log_buffer, "%02x []", _buffer[i]);
+      } else {
+        sprintf(log_buffer, "%02x [%c]", _buffer[i], _buffer[i]);
+      }
+      LoggingPort.print(log_buffer);
+    }
+    if(endline) {
+      LoggingPort.write('\n');
+    }
+#endif 
+  }
+
+  String to_string() {
+    return String(_buffer);
+  }
+
+  bool operator==(const String &s) {
+    return to_string() == s;
+  }
+
+  bool equals(const char *s, size_t len) {
+    if(len != this->len) {
+      return false;
+    }
+
+    for(size_t i=0; i<len; i++) {
+      if(s[i] != _buffer[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+private:
+  char _buffer[256] = {0};
+  size_t len = 0;
+};
+
 void Nexstar::comms() {
   while(_comm_port->available()) {
     _last_command_sent = millis();
@@ -30,7 +87,10 @@ void Nexstar::comms() {
 }
 
 bool Nexstar::ping() {
-  bool is_connected = send_command("Kx") == "x#";
+  _port.print("Kx");
+  NexstarReply reply(_port);
+  
+  bool is_connected = reply.equals("x#", 2);
   if(!is_connected && _status != NotConnected) {
     _status = NotConnected;
     TRACE("[Nexstar] Disconnected");
@@ -47,7 +107,7 @@ void Nexstar::reconnect() {
 }
 
 void Nexstar::check_connection() {
-  if(millis() - _last_ping > PING_DELAY && millis() - _last_command_sent > COMMAND_IDLE) {
+  if(millis() - _last_ping > PING_DELAY && is_idle()) {
     TRACE_F("[Nexstar] Connected: %T", ping());
   }
 }
@@ -66,8 +126,15 @@ struct __attribute__ ((packed)) NexstarTime {
     this->dst = dst;
   }
 
-  void debug() {
-    TRACE_F("h:%02x,m:%02x,s:%02x,M:%02x,D:%02x,Y:%02x,t:%02x,d:%01x", hour, minute, second, month, day, year, tz, dst);
+  void debug(bool endline=true) {
+#ifndef DISABLE_LOGGING
+    char buffer[100];
+    sprintf(buffer, "h:%02x,m:%02x,s:%02x,M:%02x,D:%02x,Y:%02x,t:%02x,d:%01x", hour, minute, second, month, day, year, tz, dst);
+    LoggingPort.print(buffer);
+    if(endline) {
+      LoggingPort.write('\n');
+    }
+#endif
   }
 
   const uint8_t ctrl = 'H';
@@ -108,8 +175,12 @@ struct __attribute__ ((packed)) NexstarLocation {
   NexstarLocation(double latitude, double longitude) : latitude(latitude), longitude(longitude) {
   }
 
-  void debug() {
-    TRACE_F("lat: d:%02x,m:%02x,s:%02x %02x; lng: d:%02x,m:%02x,s:%02x %02x",
+  void debug(bool endline=true) {
+#ifndef DISABLE_LOGGING
+    char buffer[100];
+    sprintf(
+      buffer,
+      "lat: d:%02x,m:%02x,s:%02x %02x; lng: d:%02x,m:%02x,s:%02x %02x",
       latitude.degrees,
       latitude.minutes,
       latitude.seconds,
@@ -119,8 +190,12 @@ struct __attribute__ ((packed)) NexstarLocation {
       longitude.seconds,
       longitude.sign
     );
+    LoggingPort.print(buffer);
+    if(endline) {
+      LoggingPort.write('\n');
+    }
   }
-
+#endif
 };
 
 template<typename T> size_t write_struct(T &s, HardwareSerial &port) {
@@ -129,33 +204,43 @@ template<typename T> size_t write_struct(T &s, HardwareSerial &port) {
 }
 
 void Nexstar::sync_time() {
-  if(_rtc.is_valid()) {
+  if(_rtc.is_valid() && is_idle()) {
     NexstarTime time(_rtc.utc(), 0, 0);
     Log.trace("[Nexstar] Syncing time");
+#if LOG_LEVEL >= LOG_LEVEL_TRACE
     time.debug();
+#endif
     write_struct(time, _port);
-    auto reply = get_reply();
-    if(reply == "#") {
+    NexstarReply reply(_port);
+    if(reply.equals("#", 1)) {
       _status = TimeSync;
       TRACE("[Nexstar] Time successfully synced");
     } else {
-      TRACE_F("[Nexstar] Error synchronising time: %s", reply.c_str());
+      Log.trace("[Nexstar] Error synchronising time: ");
+#if LOG_LEVEL >= LOG_LEVEL_TRACE
+      reply.debug();
+#endif
    }
   }
 }
 
 void Nexstar::sync_location() {
-  if(_gps.hasFix()) {
+  if(_gps.hasFix() && is_idle()) {
     NexstarLocation location(_gps.location().lat(), _gps.location().lng());
     Log.trace("[Nexstar] syncing location");
+#if LOG_LEVEL >= LOG_LEVEL_TRACE
     location.debug();
+#endif
     write_struct(location, _port);
-    auto reply = get_reply();
+    NexstarReply reply(_port);
     if(reply == "#") {
       _status = LocationSync;
       TRACE("[Nexstar] Location successfully synced");
     } else {
-      TRACE_F("[Nexstar] Error synchronising location: %s", reply.c_str());
+      Log.trace("[Nexstar] Error synchronising location: ");
+#if LOG_LEVEL >= LOG_LEVEL_TRACE
+      reply.debug();
+#endif
     }
   }
 }
@@ -180,26 +265,8 @@ void Nexstar::check_status() {
 }
 
 
-String Nexstar::send_command(const String &cmd) {
-  _port.print(cmd);
-  _last_command_sent = millis();
-  return get_reply();
-}
-
-String Nexstar::get_reply() {
-  uint32_t started = millis();
-  char last_char;
-  String output;
-  while(millis() - started < 2000) {
-    if(_port.available()) {
-      last_char = _port.read();
-      output += last_char;
-      if(last_char == '#')
-        break;
-    }
-  }
-  _last_command_sent = millis();
-  return output;
+bool Nexstar::is_idle() {
+  return millis() - _last_command_sent < COMMAND_IDLE;
 }
 
 // vim: set shiftwidth=2 tabstop=2 expandtab:indentSize=2:tabSize=2:noTabs=true:

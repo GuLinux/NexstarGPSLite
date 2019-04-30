@@ -1,6 +1,11 @@
 #pragma once
+
+//#define DISABLE_LOGGING
+#define LOG_LEVEL LOG_LEVEL_VERBOSE
+
 #include <ArduinoLog.h>
 
+#define LoggingPort Serial
 #define TO_LF(s) F(s "\n")
 
 #define LOG(method, s) Log.method(TO_LF(s))

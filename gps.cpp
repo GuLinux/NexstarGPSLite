@@ -1,7 +1,7 @@
 #include "gps.h"
 #include "logging.h"
 
-#define DEBUG_GPS
+//#define DEBUG_GPS
 
 namespace {
   static const char sleepMessage[] = {0xB5, 0x62, 0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x4D, 0x3B};
@@ -19,10 +19,24 @@ void GPS::begin() {
 }
 int lastDebugPrinted = 0;
 
+String last_sentence;
+
 void GPS::process() {
   int incoming = 0;
   while (port.available() > 1) {
     incoming = port.read();
+#ifndef DISABLE_LOGGING
+#ifdef DEBUG_GPS
+    char c = static_cast<char>(incoming);
+    if(c == '\r') {
+      last_sentence.trim();
+      VERBOSE_F("[GPS] Last sentence: %s", last_sentence.c_str());
+      last_sentence = String();
+    } else {
+      last_sentence += c;
+    }
+#endif
+#endif
     //USBSerial.write(incoming);
     gps.encode(incoming);
   }
@@ -35,7 +49,7 @@ void GPS::process() {
     _status = NoFix;
   }
 
-  #ifdef DEBUG_GPS
+  #ifndef DISABLE_LOGGING
   if(millis() - lastDebugPrinted > 1000) {
     lastDebugPrinted = millis();
     Log.verbose(F("[GPS] Location Fix: "));

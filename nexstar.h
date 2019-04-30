@@ -29,7 +29,7 @@ private:
   int _last_command_sent = 0;
   Status _status = NotConnected;
 
-  String send_command(const String &cmd);
+  bool is_idle();
   void check_status();
 
   void reconnect();
@@ -38,8 +38,6 @@ private:
 
   void sync_time();
   void sync_location();
-
-  String get_reply();
 };
 
 // vim: set shiftwidth=2 tabstop=2 expandtab:indentSize=2:tabSize=2:noTabs=true:
