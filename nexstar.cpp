@@ -206,7 +206,7 @@ template<typename T> size_t write_struct(T &s, HardwareSerial &port) {
 void Nexstar::sync_time() {
   if(_rtc.is_valid() && is_idle()) {
     NexstarTime time(_rtc.utc(), 0, 0);
-    Log.trace("[Nexstar] Syncing time");
+    Log.trace("[Nexstar] Syncing time ");
 #if LOG_LEVEL >= LOG_LEVEL_TRACE
     time.debug();
 #endif
@@ -227,7 +227,7 @@ void Nexstar::sync_time() {
 void Nexstar::sync_location() {
   if(_gps.hasFix() && is_idle()) {
     NexstarLocation location(_gps.location().lat(), _gps.location().lng());
-    Log.trace("[Nexstar] syncing location");
+    Log.trace("[Nexstar] syncing location ");
 #if LOG_LEVEL >= LOG_LEVEL_TRACE
     location.debug();
 #endif
