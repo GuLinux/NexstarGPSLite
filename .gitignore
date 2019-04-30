@@ -2,3 +2,5 @@ logger.*
 singleton.h
 build
 *pdf
+defines.h
+

@@ -2,7 +2,7 @@
 
 //#define DISABLE_LOGGING
 #define LOG_LEVEL LOG_LEVEL_VERBOSE
-#include "build/defines.h"
+#include "defines.h"
 #include <ArduinoLog.h>
 #undef CR
 

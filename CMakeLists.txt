@@ -23,5 +23,5 @@ endif()
 string(TOUPPER "${LOG_LEVEL}" LOG_LEVEL_H)
 set(LOG_LEVEL_H "LOG_LEVEL_${LOG_LEVEL_H}")
 
-configure_file(defines.h.in defines.h)
+configure_file(defines.h.in ${CMAKE_SOURCE_DIR}/defines.h)
 include(../Arduino.cmake)
