@@ -1,0 +1,11 @@
+#pragma once
+
+#if ${DISABLE_LOGGING_H}
+#define DISABLE_LOGGING
+#endif
+
+#if ${DEBUG_GPS_H}
+#define DEBUG_GPS
+#endif
+
+#define LOG_LEVEL ${LOG_LEVEL_H}

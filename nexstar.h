@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "gps.h"
+#include "logging.h"
 #include "rtc.h"
 
 class Settings;

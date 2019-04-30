@@ -2,8 +2,9 @@
 
 //#define DISABLE_LOGGING
 #define LOG_LEVEL LOG_LEVEL_VERBOSE
-
+#include "build/defines.h"
 #include <ArduinoLog.h>
+#undef CR
 
 #define LoggingPort Serial
 #define TO_LF(s) F(s "\n")

@@ -5,7 +5,6 @@
 
 // Logging must be imported first
 #include "logging.h"
-#undef CR
 
 #include "rtc.h"
 #include "gps.h"
