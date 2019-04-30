@@ -101,10 +101,10 @@ struct __attribute__ ((packed)) LatLng {
   uint8_t minutes;
   uint8_t seconds;
   uint8_t sign;
-  LatLng(double number) {
-    sign = 1;
+  LatLng(double number, uint8_t positive_value=0, uint8_t negative_value=1) {
+    sign = positive_value;
     if(number < 0) {
-      sign = -1;
+      sign = negative_value;
       number = -number;
     }
     degrees = static_cast<uint8_t>(number);
