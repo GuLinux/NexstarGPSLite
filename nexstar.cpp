@@ -129,7 +129,7 @@ struct __attribute__ ((packed)) NexstarTime {
   void debug(bool endline=true) {
 #ifndef DISABLE_LOGGING
     char buffer[100];
-    sprintf(buffer, "h:%02x,m:%02x,s:%02x,M:%02x,D:%02x,Y:%02x,t:%02x,d:%01x", hour, minute, second, month, day, year, tz, dst);
+    sprintf(buffer, "h:%02d,m:%02d,s:%02d,M:%02d,D:%02d,Y:%02d,tz:%02d,dst:%d", hour, minute, second, month, day, year, tz, dst);
     LoggingPort.print(buffer);
     if(endline) {
       LoggingPort.write('\n');
@@ -180,7 +180,7 @@ struct __attribute__ ((packed)) NexstarLocation {
     char buffer[100];
     sprintf(
       buffer,
-      "lat: d:%02x,m:%02x,s:%02x %02x; lng: d:%02x,m:%02x,s:%02x %02x",
+      "lat: d:%02d,m:%02d,s:%02d sign=%d; lng: d:%02d,m:%02d,s:%02d %d",
       latitude.degrees,
       latitude.minutes,
       latitude.seconds,
