@@ -4,8 +4,8 @@
 #include "nexstar_data.h"
 
 #define NOT_CONNECTED_DELAY 2500
-#define PING_DELAY 5000
-#define COMMAND_IDLE 5000
+#define PING_DELAY 15000
+#define COMMAND_IDLE 15000
 
 Nexstar::Nexstar(HardwareSerial &port, GPS &gps, RTCProvider &rtc) : _port(port), _gps(gps), _rtc(rtc) {
 }

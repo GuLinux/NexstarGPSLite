@@ -28,6 +28,20 @@ private:
   bool ping();
   int _last_ping = 0;
   int _last_command_sent = 0;
+
+  struct CheckReply {
+    String message;
+    Status on_success;
+    Status on_failed;
+#ifndef DISABLE_LOGGING
+    String on_success_trace;
+    String on_failed_trace;
+#endif
+    operator bool() const { return ! message.length() > 0; }
+  };
+
+  CheckReply _waiting_reply;
+
   Status _status = NotConnected;
 
   bool is_idle();

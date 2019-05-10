@@ -37,7 +37,6 @@ void GPS::process() {
     }
 #endif
 #endif
-    //USBSerial.write(incoming);
     gps.encode(incoming);
   }
 
