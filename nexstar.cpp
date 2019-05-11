@@ -24,14 +24,12 @@ void Nexstar::set_comm_port(Stream *comm_port) {
 void Nexstar::process() {
   DEBUG_F
   check_status();
-  if(_status >= Connected) {
-    comms();
-  }
+  comms();
 }
 
 void Nexstar::comms() {
   DEBUG_F
-  if(! _comm_port) {
+  if(! _comm_port || _status == NotConnected || _waiting_reply) {
     return;
   }
   if(_comm_port->available()) {
