@@ -3,4 +3,5 @@ singleton.h
 build
 *pdf
 defines.h
+Arduino.cmake
 

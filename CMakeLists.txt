@@ -15,4 +15,11 @@ string(TOUPPER "${LOG_LEVEL}" LOG_LEVEL_H)
 set(LOG_LEVEL_H "LOG_LEVEL_${LOG_LEVEL_H}")
 
 configure_file(defines.h.in ${CMAKE_SOURCE_DIR}/defines.h)
-include(../Arduino.cmake)
+file(
+    DOWNLOAD
+    https://raw.githubusercontent.com/GuLinux/GuLinux-Commons/b928073acb9a6c1e8de4bdc5c3845240dd2fa80c/Arduino/Arduino.cmake
+    ${CMAKE_SOURCE_DIR}/Arduino.cmake
+    EXPECTED_MD5 f8a12e01b3b15caa836e73fbab60cc2a
+)
+
+include(${CMAKE_SOURCE_DIR}/Arduino.cmake)
