@@ -12,7 +12,7 @@ As soon as it's powered on, NexstarGPSLite will first sync the telescope clock t
 
  - STM32F103C8 board ("Blue pill" or equivalent)
  - 3v lithium battery (powering onboard RTC)
- - GPS Receiver, either NEO-6M OR NEO-8M
+ - GPS Receiver, either NEO-6M OR NEO-M8
  - MAX3232 ttl to RS-232 converter
  - Bluetooth module (HC05)
  - N Mosfet transistor (2n7000 or equivalent)
