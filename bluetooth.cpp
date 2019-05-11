@@ -1,5 +1,6 @@
 #include "bluetooth.h"
 #include "logging.h"
+#include "defines.h"
 
 
 Bluetooth::Bluetooth(HardwareSerial &port, int power_pin, int at_mode_pin) : port(port), power_pin(power_pin), at_mode_pin(at_mode_pin) {
@@ -14,8 +15,8 @@ void Bluetooth::setup() {
 
   TRACE("Initialising BT");
   send_command("AT");
-  send_command("AT+NAME=\"NexstarGPS-Lite\"");
-  send_command("AT+PSWD=\"1234\"");
+  send_command("AT+NAME=\"" BLUETOOTH_DEVICE_NAME "\"");
+  send_command("AT+PSWD=\"" BLUETOOTH_DEVICE_PIN "\"");
   digitalWrite(at_mode_pin, 0);
   send_command("AT+RESET");
   power_off();

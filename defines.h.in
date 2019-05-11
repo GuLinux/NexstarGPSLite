@@ -1,19 +1,13 @@
 #pragma once
+#cmakedefine DISABLE_LOGGING
 
-#if ${DISABLE_LOGGING_H}
-#define DISABLE_LOGGING
-#endif
-
-#if ${TRACE_FUNCTIONS_H}
 #ifndef DISABLE_LOGGING
-#define TRACE_FUNCTIONS
-#endif
-#endif
-
-#if ${DEBUG_GPS_H}
-#ifndef DISABLE_LOGGING
-#define DEBUG_GPS
-#endif
+#cmakedefine TRACE_FUNCTIONS
+#cmakedefine DEBUG_GPS
 #endif
 
-#define LOG_LEVEL ${LOG_LEVEL_H}
+#cmakedefine LOG_LEVEL ${LOG_LEVEL}
+
+#cmakedefine BLUETOOTH_DEVICE_NAME "${BLUETOOTH_DEVICE_NAME}"
+#cmakedefine BLUETOOTH_DEVICE_PIN "${BLUETOOTH_DEVICE_PIN}"
+

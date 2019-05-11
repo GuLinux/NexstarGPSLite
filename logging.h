@@ -1,10 +1,15 @@
 #pragma once
 
 //#define DISABLE_LOGGING
-#define LOG_LEVEL LOG_LEVEL_VERBOSE
+
 #include "defines.h"
 #include <ArduinoLog.h>
 #undef CR
+
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_VERBOSE
+#endif
+
 
 #define LoggingPort Serial
 #define TO_LF(s) F(s "\n")
