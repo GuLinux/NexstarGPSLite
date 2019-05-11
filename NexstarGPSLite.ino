@@ -36,10 +36,10 @@ int GPSStatusLeds[][LEDS_PATTERN_SIZE] = {
 };
 
 int NexstarStatusLeds[][LEDS_PATTERN_SIZE] = {
-    {1,0,0,0,0,0,0,0,0,0,0,0}, // NotConnected, 1 blink
-    {1,0,1,0,0,0,0,0,0,0,0,0}, // Connected, 2 blinks
-    {1,0,1,0,1,0,0,0,0,0,0,0}, // Time sync, 3 blinks
-    {1,0,1,0,1,0,1,0,0,0,0,0}, // Location sync, 4 blinks
+    {0,0,0,0,0,0,0,0,0,0,0,0}, // NotConnected, 0 blink
+    {1,0,0,0,0,0,0,0,0,0,0,0}, // Connected, 1 blinks
+    {1,0,1,0,0,0,0,0,0,0,0,0}, // Time sync, 2 blinks
+    {1,0,1,0,1,0,0,0,0,0,0,0}, // Location sync, 3 blinks
 };
 
 
