@@ -29,17 +29,19 @@ Bluetooth bluetooth(BluetoothSerial, BT_POWER_PIN, BT_AT_MODE_PIN);
 
 Stream *commPort;
 
+// Green: Nexstar; Blue: GPS
+
 int GPSStatusLeds[][LEDS_PATTERN_SIZE] = {
-    {1,0,0,0,0,0,0,0,0,0,0,0}, // NoFix
-    {1,0,1,0,0,0,0,0,0,0,0,0}, // Time Fix
-    {1,0,1,0,1,0,0,0,0,0,0,0}, // Fix
+    {1,0,0,0,0,0,0,0,0,0,0,0}, // NoFix, 1 blink
+    {1,0,1,0,0,0,0,0,0,0,0,0}, // Time Fix, 2 blinks
+    {1,0,1,0,1,0,0,0,0,0,0,0}, // Fix, 3 blinks
 };
 
 int NexstarStatusLeds[][LEDS_PATTERN_SIZE] = {
-    {1,0,0,0,0,0,0,0,0,0,0,0}, // NotConnected
-    {1,0,1,0,0,0,0,0,0,0,0,0}, // Connected
-    {1,0,1,0,1,0,0,0,0,0,0,0}, // Time sync
-    {1,0,1,0,1,0,1,0,0,0,0,0}, // Location sync
+    {1,0,0,0,0,0,0,0,0,0,0,0}, // NotConnected, 1 blink
+    {1,0,1,0,0,0,0,0,0,0,0,0}, // Connected, 2 blinks
+    {1,0,1,0,1,0,0,0,0,0,0,0}, // Time sync, 3 blinks
+    {1,0,1,0,1,0,1,0,0,0,0,0}, // Location sync, 4 blinks
 };
 
 
