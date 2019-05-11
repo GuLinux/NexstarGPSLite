@@ -92,9 +92,9 @@ You just need to replace the `cmake ..` in the `Compilation and upload` section 
 
 Parameters:
 
- - DISABLE_LOGGING (default: `On`) set to `Off` to enable application logs over USBSerial.
- - LOG_LEVEL (default: `verbose`) log level for when logging is enabled (allowed values: [verbose, trace, notice, warning, error, fatal]).
- - DEBUG_GPS (default: `Off`) also prints GPS NMEA sentences when logging is enabled.
- - BLUETOOTH_DEVICE_NAME (default: `NexstarGPS-Lite`) use to change the bluetooth device name).
- - BLUETOOTH_DEVICE_PIN (default: `1234`) use to change the bluetooth pairing pin.
+ - `DISABLE_LOGGING` (default: `On`) set to `Off` to enable application logs over USBSerial.
+ - `LOG_LEVEL` (default: `verbose`) log level for when logging is enabled (allowed values: [verbose, trace, notice, warning, error, fatal]).
+ - `DEBUG_GPS` (default: `Off`) also prints GPS NMEA sentences when logging is enabled.
+ - `BLUETOOTH_DEVICE_NAME` (default: `NexstarGPS-Lite`) use to change the bluetooth device name).
+ - `BLUETOOTH_DEVICE_PIN` (default: `1234`) use to change the bluetooth pairing pin.
 
