@@ -27,8 +27,6 @@ GPS gps(GPSSerial);
 Nexstar nexstar{NexstarSerial, gps, rtcProvider};
 Bluetooth bluetooth(BluetoothSerial, BT_POWER_PIN, BT_AT_MODE_PIN);
 
-Stream *commPort;
-
 // Green: Nexstar; Blue: GPS
 
 int GPSStatusLeds[][LEDS_PATTERN_SIZE] = {

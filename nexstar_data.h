@@ -2,6 +2,7 @@
 #include <TimeLib.h>
 #include "Arduino.h"
 #include "logging.h"
+#include <stdlib.h>
 
 class NexstarReply {
 public:
@@ -36,6 +37,16 @@ public:
 
   String to_string() {
     return String(_buffer);
+  }
+  
+  String to_hex() {
+    String result;
+    char buf[3] = {0,0,0};
+    for(uint8_t i = 0; i<len; i++) {
+      sprintf(buf, "%02X", _buffer[i]);
+      result += buf;
+    }
+    return result;
   }
 
   bool operator==(const String &s) {

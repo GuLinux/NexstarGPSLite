@@ -3,9 +3,11 @@
 #include <TimeLib.h>
 #include "nexstar_data.h"
 
-#define NOT_CONNECTED_DELAY 2500
-#define PING_DELAY 15000
-#define COMMAND_IDLE 15000
+
+#define PING_DELAY 5000
+#define COMMAND_IDLE 5000
+#define RESPONSE_TIMEOUT 3500
+#define NOT_CONNECTED_DELAY 4000
 
 Nexstar::Nexstar(HardwareSerial &port, GPS &gps, RTCProvider &rtc) : _port(port), _gps(gps), _rtc(rtc) {
 }
@@ -20,11 +22,18 @@ void Nexstar::set_comm_port(Stream *comm_port) {
 }
 
 void Nexstar::process() {
+  DEBUG_F
   check_status();
-  comms();
+  if(_status >= Connected) {
+    comms();
+  }
 }
 
 void Nexstar::comms() {
+  DEBUG_F
+  if(! _comm_port) {
+    return;
+  }
   if(_comm_port->available()) {
     _last_command_sent = millis();
     _port.write(_comm_port->read());
@@ -34,35 +43,82 @@ void Nexstar::comms() {
   }
 }
 
-bool Nexstar::ping() {
-  _port.print("Kx");
-  NexstarReply reply(_port);
-  
-  bool is_connected = reply.equals("x#", 2);
-  if(!is_connected) {
-    _status = NotConnected;
-    Log.trace("[Nexstar] Disconnected - ");
-#if LOG_LEVEL >= LOG_LEVEL_TRACE
-    reply.debug();
-#endif
-  }
+void Nexstar::ping(Nexstar::Status next_status) {
+  DEBUG_F
   _last_ping = millis();
-  return is_connected;
+  TRACE_F("[Nexstar] PING [status=%d]", _status);
+  _port.print("Kx");
+  _waiting_reply = CheckReply{
+    millis(),
+    "x#",
+    2,
+    next_status,
+    NotConnected,
+    true,
+#ifndef DISABLE_LOGGING
+    "PONG",
+    "Disconnected",
+#endif
+  };
+}
+
+
+void Nexstar::check_reply() {
+  DEBUG_F
+//  TRACE_F("[Nexstar] Port available: %d", _port.available());
+  if(!_port.available()) {
+    if(millis() - _waiting_reply.time > RESPONSE_TIMEOUT) {
+      TRACE("[Nexstar] Response timeout");
+      _status = _waiting_reply.on_failed;
+      if(_waiting_reply.close_on_failed) {
+        TRACE("[Nexstar] closing port");
+        _port.end();
+      }
+#ifndef DISABLE_LOGGING
+      TRACE("[Nexstar] Communication timeout");
+#endif
+      _waiting_reply.reset();
+    }
+    return;
+  }
+//  TRACE("[Nexstar] Fetching reply");
+  NexstarReply reply(_port);
+  bool is_success = reply.equals(_waiting_reply.message, _waiting_reply.size);
+//  TRACE_F("[Nexstar] Is success: %T", is_success);
+  _status = is_success ? _waiting_reply.on_success : _waiting_reply.on_failed;
+#ifndef DISABLE_LOGGING
+  TRACE_F(
+    "[Nexstar] %s [status=%d]: %s [%s]",
+    is_success ? _waiting_reply.on_success_trace : _waiting_reply.on_failed_trace,
+    _status,
+    reply.to_hex().c_str(),
+    reply.to_string().c_str()
+  );
+#endif
+  if(!is_success && _waiting_reply.close_on_failed) {
+    _port.end();
+  }
+  _waiting_reply.reset();
+}
+
+void Nexstar::CheckReply::reset() {
+  DEBUG_F
+  size = 0;
 }
 
 void Nexstar::reconnect() {
-  _port.begin(9600);
-  if(millis() - _last_ping > NOT_CONNECTED_DELAY && ping()) {
-    TRACE("[Nexstar] Connection established");
-    _status = Connected;
-  } else {
-    _port.end();
+  DEBUG_F
+  if(millis() - _last_ping > NOT_CONNECTED_DELAY) {
+    TRACE("[Nexstar] Opening port");
+    _port.begin(9600);
+    ping(Connected);
   }
 }
 
 void Nexstar::check_connection() {
+  DEBUG_F
   if(millis() - _last_ping > PING_DELAY && is_idle()) {
-    TRACE_F("[Nexstar] Connected: %T", ping());
+    ping(_status);
   }
 }
 
@@ -79,16 +135,18 @@ void Nexstar::sync_time() {
     time.debug();
 #endif
     write_struct(time, _port);
-    NexstarReply reply(_port);
-    if(reply.equals("#", 1)) {
-      _status = TimeSync;
-      TRACE("[Nexstar] Time successfully synced");
-    } else {
-      Log.trace("[Nexstar] Error synchronising time: ");
-#if LOG_LEVEL >= LOG_LEVEL_TRACE
-      reply.debug();
+    _waiting_reply = CheckReply{
+      millis(),
+      "#",
+      1,
+      TimeSync,
+      _status,
+      false,
+#ifndef DISABLE_LOGGING
+      "Time successfully synced",
+      "Error synchronising time",
 #endif
-   }
+    };
   }
 }
 
@@ -100,21 +158,27 @@ void Nexstar::sync_location() {
     location.debug();
 #endif
     write_struct(location, _port);
-    NexstarReply reply(_port);
-    if(reply == "#") {
-      _status = LocationSync;
-      TRACE("[Nexstar] Location successfully synced");
-    } else {
-      Log.trace("[Nexstar] Error synchronising location: ");
-#if LOG_LEVEL >= LOG_LEVEL_TRACE
-      reply.debug();
+    _waiting_reply = CheckReply{
+      millis(),
+      "#",
+      1,
+      LocationSync,
+      _status,
+      false,
+#ifndef DISABLE_LOGGING
+      "Location successfully synced",
+      "Error synchronising location",
 #endif
-    }
+    };
   }
 }
 
-
 void Nexstar::check_status() {
+  DEBUG_F
+  if(_waiting_reply) {
+    this->check_reply();
+    return;
+  }
   switch(_status) {
     case NotConnected:
       reconnect();
@@ -134,7 +198,7 @@ void Nexstar::check_status() {
 
 
 bool Nexstar::is_idle() {
-  return millis() - _last_command_sent > COMMAND_IDLE;
+  return ! _waiting_reply && millis() - _last_command_sent > COMMAND_IDLE;
 }
 
 // vim: set shiftwidth=2 tabstop=2 expandtab:indentSize=2:tabSize=2:noTabs=true:

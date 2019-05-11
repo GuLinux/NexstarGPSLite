@@ -25,19 +25,24 @@ private:
   Stream *_comm_port = nullptr;
   GPS &_gps;
   RTCProvider &_rtc;
-  bool ping();
+  void ping(Status next_status);
+  void check_reply();
   int _last_ping = 0;
   int _last_command_sent = 0;
 
   struct CheckReply {
-    String message;
+    uint32_t time;
+    char message[50];
+    size_t size;
     Status on_success;
     Status on_failed;
+    bool close_on_failed;
 #ifndef DISABLE_LOGGING
-    String on_success_trace;
-    String on_failed_trace;
+    char on_success_trace[256];
+    char on_failed_trace[256];
 #endif
-    operator bool() const { return ! message.length() > 0; }
+    operator bool() const { return size > 0; }
+    void reset();
   };
 
   CheckReply _waiting_reply;
